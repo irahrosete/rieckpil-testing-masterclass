@@ -34,7 +34,8 @@ class ReviewVerifierTest {
   @Test
   @DisplayName("Should fail when review contains Lorem ipsum")
   void testLoremIpsum() {
-    String review = """
+    String review =
+        """
       Lorem ipsum dolor sit amet consectetur adipiscing elit. \
       Quisque faucibus ex sapien vitae pellentesque sem placerat. \
       In id cursus mi pretium tellus duis convallis. \
@@ -44,7 +45,6 @@ class ReviewVerifierTest {
       Ut hendrerit semper vel class aptent taciti sociosqu. \
       Ad litora torquent per conubia nostra inceptos himenaeos.\
       """;
-    System.out.println(review);
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertFalse(result, "ReviewVerifier did not detect lorem ipsum.");
   }
@@ -57,15 +57,21 @@ class ReviewVerifierTest {
   }
 
   @RepeatedTest(5)
-  void shouldFailWhenRandomReviewQualityIsBad(@RandomReview String review) {
+  void shouldFailWhenRandomReviewQualityIsBad(@RandomReview String review)
+      throws InterruptedException {
+    Thread.sleep(1000);
+
     System.out.println(review);
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertFalse(result, "ReviewVerifier did not detect random bad review");
   }
 
   @Test
-  void shouldPassWhenReviewIsGood() {
-    String review = "I can totally recommend this book to anyone interested in learning how to write Java code!";
+  void shouldPassWhenReviewIsGood() throws InterruptedException {
+    Thread.sleep(1000);
+
+    String review =
+        "I can totally recommend this book to anyone interested in learning how to write Java code!";
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertTrue(result, "ReviewVerifier did not detect a good review");
   }
