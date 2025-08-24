@@ -1,6 +1,9 @@
 package de.rieckpil.courses.book.review;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -38,5 +41,12 @@ class ReviewVerifierTest {
     System.out.println(review);
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertFalse(result, "ReviewVerifier detected lorem ipsum.");
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(resources = "/badReview.csv")
+  void shouldFailWhenReviewIsOfBadQuality(String review) {
+    boolean result = reviewVerifier.doesMeetQualityStandards(review);
+    assertFalse(result, "ReviewVerifier detected bad review");
   }
 }
