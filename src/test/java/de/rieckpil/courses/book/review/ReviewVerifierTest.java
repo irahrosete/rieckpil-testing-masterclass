@@ -2,6 +2,7 @@ package de.rieckpil.courses.book.review;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,7 +54,7 @@ class ReviewVerifierTest {
     assertFalse(result, "ReviewVerifier detected bad review");
   }
 
-  @Test
+  @RepeatedTest(5)
   void shouldFailWhenRandomReviewQualityIsBad(@RandomReview String review) {
     System.out.println(review);
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
