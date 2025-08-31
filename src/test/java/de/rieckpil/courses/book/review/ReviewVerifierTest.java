@@ -1,5 +1,7 @@
 package de.rieckpil.courses.book.review;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
@@ -74,5 +76,15 @@ class ReviewVerifierTest {
         "I can totally recommend this book to anyone interested in learning how to write Java code!";
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertTrue(result, "ReviewVerifier did not detect a good review");
+  }
+
+  @Test
+  void shouldPassWhenReviewIsGoodHamcrest() {
+    String review =
+      "I can totally recommend this book to anyone interested in learning how to write Java code!";
+    boolean result = reviewVerifier.doesMeetQualityStandards(review);
+//    assertTrue(result, "ReviewVerifier did not detect a good review"); Junit 5
+
+    MatcherAssert.assertThat("ReviewVerifier did not detect a good review", result, Matchers.equalTo(true));
   }
 }
