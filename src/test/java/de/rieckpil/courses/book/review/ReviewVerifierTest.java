@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import java.util.List;
+
 import static de.rieckpil.courses.book.review.RandomReviewParameterResolverExtension.RandomReview;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -86,5 +88,8 @@ class ReviewVerifierTest {
 //    assertTrue(result, "ReviewVerifier did not detect a good review"); Junit 5
 
     MatcherAssert.assertThat("ReviewVerifier did not detect a good review", result, Matchers.equalTo(true));
+    MatcherAssert.assertThat("Lorem ipsum", Matchers.endsWith("ipsum"));
+    MatcherAssert.assertThat(List.of(1,2,3,4,5), Matchers.hasSize(5));
+    MatcherAssert.assertThat(List.of(1,2,3,4,5), Matchers.anyOf(Matchers.hasSize(5), Matchers.emptyIterable()));
   }
 }
