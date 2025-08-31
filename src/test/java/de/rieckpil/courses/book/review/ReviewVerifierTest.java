@@ -1,5 +1,10 @@
 package de.rieckpil.courses.book.review;
 
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
@@ -74,5 +79,34 @@ class ReviewVerifierTest {
         "I can totally recommend this book to anyone interested in learning how to write Java code!";
     boolean result = reviewVerifier.doesMeetQualityStandards(review);
     assertTrue(result, "ReviewVerifier did not detect a good review");
+  }
+
+  @Test
+  void shouldPassWhenReviewIsGoodHamcrest() {
+    String review =
+        "I can totally recommend this book to anyone interested in learning how to write Java code!";
+    boolean result = reviewVerifier.doesMeetQualityStandards(review);
+    //    assertTrue(result, "ReviewVerifier did not detect a good review"); Junit 5
+
+    MatcherAssert.assertThat(
+        "ReviewVerifier did not detect a good review", result, Matchers.equalTo(true));
+    MatcherAssert.assertThat("Lorem ipsum", Matchers.endsWith("ipsum"));
+    MatcherAssert.assertThat(List.of(1, 2, 3, 4, 5), Matchers.hasSize(5));
+    MatcherAssert.assertThat(
+        List.of(1, 2, 3, 4, 5), Matchers.anyOf(Matchers.hasSize(5), Matchers.emptyIterable()));
+  }
+
+  @Test
+  void shouldPassWhenReviewIsGoodAssertJ() {
+    String review =
+        "I can totally recommend this book to anyone interested in learning how to write Java code!";
+    boolean result = reviewVerifier.doesMeetQualityStandards(review);
+    //    assertTrue(result, "ReviewVerifier did not detect a good review"); JUnit 5
+
+    Assertions.assertThat(result)
+        .withFailMessage("ReviewVerifier did not detect a good review")
+        .isTrue();
+    Assertions.assertThat(List.of(1, 2, 3, 4, 5)).hasSizeBetween(1, 10);
+    Assertions.assertThat(List.of(1, 2, 3, 4, 5)).contains(3).isNotEmpty();
   }
 }
