@@ -10,7 +10,8 @@ public class JsonTest {
 
   @Test
   void testWithJSONAssert() throws JSONException {
-    String result = """
+    String result =
+        """
       {
         "name": "duke",
         "age": 42,
@@ -32,7 +33,8 @@ public class JsonTest {
 
   @Test
   void testWithJsonPath() {
-    String result = """
+    String result =
+        """
       {
         "name": "duke",
         "age": 42,
