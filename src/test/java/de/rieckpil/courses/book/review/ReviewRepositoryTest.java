@@ -10,8 +10,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -21,15 +19,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
-@Testcontainers
+//@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ReviewRepositoryTest {
 
-  @Container
+//  @Container
   static PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:12")
     .withDatabaseName("test")
     .withUsername("duke")
     .withPassword("s3cret");
+
+  static {
+    container.start();
+  }
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
