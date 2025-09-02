@@ -1,85 +1,62 @@
 package de.rieckpil.courses.book.review;
 
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.util.List;
 
-import javax.sql.DataSource;
-
-import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static java.time.LocalDateTime.now;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DataJpaTest(
-    properties = {
-      "spring.flyway.enabled=false", // to disable flyway and let h2 in-memory kick in. not
-      // advisable in production
-      "spring.jpa.hibernate.ddl-auto=create-drop",
-      "spring.datasource.driver-class-name=com.p6spy.engine.spy.P6SpyDriver", // P6Spy
-      "spring.datasource.url=jdbc:p6spy:h2:mem:testing;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false" // P6Spy
-    })
+@DataJpaTest
+@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ReviewRepositoryTest {
 
-  @Autowired private EntityManager entityManager;
+  @Container
+  static PostgreSQLContainer<?> container =
+      new PostgreSQLContainer<>("postgres:12")
+          .withDatabaseName("test")
+          .withUsername("duke")
+          .withPassword("s3cret");
 
-  @Autowired private TestEntityManager testEntityManager;
+  @DynamicPropertySource
+  static void properties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", container::getJdbcUrl);
+    registry.add("spring.datasource.username", container::getUsername);
+    registry.add("spring.datasource.password", container::getPassword);
+  }
 
   @Autowired private ReviewRepository cut;
 
-  @Autowired private DataSource dataSource;
-
-  @BeforeEach
-  void beforeEach() {
-    assertEquals(0, cut.count());
-  }
-
   @Test
-  void notNull() throws SQLException {
-    assertNotNull(entityManager);
-    assertNotNull(testEntityManager);
-    assertNotNull(cut);
-    assertNotNull(dataSource);
+  @Sql(scripts = "/scripts/INIT_REVIEW_EACH_BOOK.sql")
+  void shouldGetTwoReviewsWhenDBContainsTwoBooksWithReviews() {
+    List<ReviewStatistic> result = cut.getReviewStatistics();
 
-    System.out.println(dataSource.getConnection().getMetaData().getDatabaseProductName());
-  }
+    assertEquals(3, cut.count());
+    assertEquals(2, cut.getReviewStatistics().size());
 
-  @Test
-  void testSave() {
-    Review review = new Review();
-    review.setTitle("Review 101");
-    review.setContent("Great book!");
-    review.setCreatedAt(now());
-    review.setRating(5);
-    review.setBook(null);
-    review.setUser(null);
+    cut.getReviewStatistics()
+        .forEach(
+            reviewStatistic -> {
+              System.out.println("ReviewStatistic");
+              System.out.println(reviewStatistic.getId());
+              System.out.println(reviewStatistic.getAvg());
+              System.out.println(reviewStatistic.getIsbn());
+              System.out.println(reviewStatistic.getRatings());
+              System.out.println();
+            });
 
-    //    Review result = cut.save(review);
-    Review result = testEntityManager.persistAndFlush(review);
-
-    System.out.println(result);
-    assertNotNull(result.getId());
-  }
-
-  @Test
-  void transactionSupportTest() {
-    Review review = new Review();
-    review.setTitle("Review 101");
-    review.setContent("Great book!");
-    review.setCreatedAt(now());
-    review.setRating(5);
-    review.setBook(null);
-    review.setUser(null);
-
-    Review result = cut.save(review);
-
-    System.out.println(result);
-    assertNotNull(result.getId());
+    assertEquals(2, result.getFirst().getRatings());
+    assertEquals(new BigDecimal("3.00"), result.getFirst().getAvg());
   }
 }
