@@ -1,39 +1,32 @@
 package de.rieckpil.courses.book.review;
 
-import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.util.List;
 
-import static java.time.LocalDateTime.now;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
-// @Testcontainers
+@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ReviewRepositoryTest {
 
-  //  @Container
+  @Container
   static PostgreSQLContainer<?> container =
       new PostgreSQLContainer<>("postgres:12")
           .withDatabaseName("test")
           .withUsername("duke")
-          .withPassword("s3cret")
-          .withReuse(true);
-
-  static {
-    container.start();
-  }
+          .withPassword("s3cret");
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
@@ -42,39 +35,28 @@ class ReviewRepositoryTest {
     registry.add("spring.datasource.password", container::getPassword);
   }
 
-  @Autowired private EntityManager entityManager;
-
-  @Autowired private TestEntityManager testEntityManager;
-
   @Autowired private ReviewRepository cut;
 
-  @Autowired private DataSource dataSource;
-
-  @BeforeEach
-  void beforeEach() {
-    assertEquals(0, cut.count());
-  }
-
   @Test
-  void notNull() throws SQLException {
-    assertNotNull(entityManager);
-    assertNotNull(testEntityManager);
-    assertNotNull(cut);
-    assertNotNull(dataSource);
+  @Sql(scripts = "/scripts/INIT_REVIEW_EACH_BOOK.sql")
+  void shouldGetTwoReviewsWhenDBContainsTwoBooksWithReviews() {
+    List<ReviewStatistic> result = cut.getReviewStatistics();
 
-    System.out.println(dataSource.getConnection().getMetaData().getDatabaseProductName());
+    assertEquals(3, cut.count());
+    assertEquals(2, cut.getReviewStatistics().size());
 
-    Review review = new Review();
-    review.setTitle("Review 101");
-    review.setContent("Great book!");
-    review.setCreatedAt(now());
-    review.setRating(5);
-    review.setBook(null);
-    review.setUser(null);
+    cut.getReviewStatistics()
+        .forEach(
+            reviewStatistic -> {
+              System.out.println("ReviewStatistic");
+              System.out.println(reviewStatistic.getId());
+              System.out.println(reviewStatistic.getAvg());
+              System.out.println(reviewStatistic.getIsbn());
+              System.out.println(reviewStatistic.getRatings());
+              System.out.println();
+            });
 
-    Review result = cut.save(review);
-
-    System.out.println(result);
-    assertNotNull(result.getId());
+    assertEquals(2, result.getFirst().getRatings());
+    assertEquals(new BigDecimal("3.00"), result.getFirst().getAvg());
   }
 }
