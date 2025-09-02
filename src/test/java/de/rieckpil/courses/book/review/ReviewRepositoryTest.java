@@ -19,15 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
-//@Testcontainers
+// @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ReviewRepositoryTest {
 
-//  @Container
-  static PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:12")
-    .withDatabaseName("test")
-    .withUsername("duke")
-    .withPassword("s3cret");
+  //  @Container
+  static PostgreSQLContainer<?> container =
+      new PostgreSQLContainer<>("postgres:12")
+          .withDatabaseName("test")
+          .withUsername("duke")
+          .withPassword("s3cret")
+          .withReuse(true);
 
   static {
     container.start();
