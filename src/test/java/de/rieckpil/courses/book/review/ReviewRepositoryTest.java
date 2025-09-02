@@ -1,6 +1,7 @@
 package de.rieckpil.courses.book.review;
 
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -10,6 +11,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 
 import static java.time.LocalDateTime.now;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
@@ -30,6 +32,11 @@ class ReviewRepositoryTest {
 
   @Autowired
   private DataSource dataSource;
+
+  @BeforeEach
+    void beforeEach() {
+    assertEquals(0, cut.count());
+  }
 
   @Test
   void notNull() throws SQLException {
@@ -53,6 +60,22 @@ class ReviewRepositoryTest {
 
 //    Review result = cut.save(review);
     Review result = testEntityManager.persistAndFlush(review);
+
+    System.out.println(result);
+    assertNotNull(result.getId());
+  }
+
+  @Test
+  void transactionSupportTest() {
+    Review review = new Review();
+    review.setTitle("Review 101");
+    review.setContent("Great book!");
+    review.setCreatedAt(now());
+    review.setRating(5);
+    review.setBook(null);
+    review.setUser(null);
+
+    Review result = cut.save(review);
 
     System.out.println(result);
     assertNotNull(result.getId());
