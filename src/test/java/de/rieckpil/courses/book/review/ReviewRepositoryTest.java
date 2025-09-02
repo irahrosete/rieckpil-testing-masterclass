@@ -1,40 +1,42 @@
 package de.rieckpil.courses.book.review;
 
+import java.sql.SQLException;
+
+import javax.sql.DataSource;
+
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-
-import javax.sql.DataSource;
-import java.sql.SQLException;
 
 import static java.time.LocalDateTime.now;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DataJpaTest
-//  (properties = {
-//    "spring.flyway.enabled=false",
-//    "spring.jpa.hibernate.ddl-auto=create-drop"
-//  }) to disable flyway and let h2 in-memory kick in. not advisable in production
+@DataJpaTest(
+    properties = {
+      "spring.flyway.enabled=false", // to disable flyway and let h2 in-memory kick in. not
+      // advisable in production
+      "spring.jpa.hibernate.ddl-auto=create-drop",
+      "spring.datasource.driver-class-name=com.p6spy.engine.spy.P6SpyDriver", // P6Spy
+      "spring.datasource.url=jdbc:p6spy:h2:mem:testing;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false" // P6Spy
+    })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ReviewRepositoryTest {
 
-  @Autowired
-  private EntityManager entityManager;
+  @Autowired private EntityManager entityManager;
 
-  @Autowired
-  private TestEntityManager testEntityManager;
+  @Autowired private TestEntityManager testEntityManager;
 
-  @Autowired
-  private ReviewRepository cut;
+  @Autowired private ReviewRepository cut;
 
-  @Autowired
-  private DataSource dataSource;
+  @Autowired private DataSource dataSource;
 
   @BeforeEach
-    void beforeEach() {
+  void beforeEach() {
     assertEquals(0, cut.count());
   }
 
@@ -58,7 +60,7 @@ class ReviewRepositoryTest {
     review.setBook(null);
     review.setUser(null);
 
-//    Review result = cut.save(review);
+    //    Review result = cut.save(review);
     Review result = testEntityManager.persistAndFlush(review);
 
     System.out.println(result);
@@ -80,5 +82,4 @@ class ReviewRepositoryTest {
     System.out.println(result);
     assertNotNull(result.getId());
   }
-
 }
