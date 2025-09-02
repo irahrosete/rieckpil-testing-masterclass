@@ -61,16 +61,17 @@ class ReviewControllerTest {
   }
 
   @Test
-//  @WithMockUser(username = "duke")
+  // @WithMockUser(username = "duke")
   void shouldNotReturnReviewsWhenUserAuthenticated() throws Exception {
     this.mockMvc
-      .perform(get("/api/books/reviews/statistics")
-//      .with(user("duke")))
-//      .with(oauth2Login()))
-//      .with(oidcLogin()))
-//      .with(httpBasic("duke", "password")))
-      .with(jwt()))
-      .andExpect(status().isOk());
+        .perform(
+            get("/api/books/reviews/statistics")
+                // .with(user("duke")))
+                // .with(oauth2Login()))
+                // .with(oidcLogin()))
+                // .with(httpBasic("duke", "password")))
+                .with(jwt()))
+        .andExpect(status().isOk());
 
     verify(reviewService).getReviewStatistics();
   }
