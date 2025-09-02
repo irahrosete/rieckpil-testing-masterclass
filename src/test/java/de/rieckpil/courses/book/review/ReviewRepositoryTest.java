@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -22,6 +23,9 @@ class ReviewRepositoryTest {
   private EntityManager entityManager;
 
   @Autowired
+  private TestEntityManager testEntityManager;
+
+  @Autowired
   private ReviewRepository cut;
 
   @Autowired
@@ -30,6 +34,7 @@ class ReviewRepositoryTest {
   @Test
   void notNull() throws SQLException {
     assertNotNull(entityManager);
+    assertNotNull(testEntityManager);
     assertNotNull(cut);
     assertNotNull(dataSource);
 
@@ -46,7 +51,8 @@ class ReviewRepositoryTest {
     review.setBook(null);
     review.setUser(null);
 
-    Review result = cut.save(review);
+//    Review result = cut.save(review);
+    Review result = testEntityManager.persistAndFlush(review);
 
     System.out.println(result);
     assertNotNull(result.getId());
