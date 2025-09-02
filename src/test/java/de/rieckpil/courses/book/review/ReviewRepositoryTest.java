@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import javax.sql.DataSource;
-
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static java.time.LocalDateTime.now;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
 //  (properties = {
@@ -34,6 +34,22 @@ class ReviewRepositoryTest {
     assertNotNull(dataSource);
 
     System.out.println(dataSource.getConnection().getMetaData().getDatabaseProductName());
+  }
+
+  @Test
+  void testSave() {
+    Review review = new Review();
+    review.setTitle("Review 101");
+    review.setContent("Great book!");
+    review.setCreatedAt(now());
+    review.setRating(5);
+    review.setBook(null);
+    review.setUser(null);
+
+    Review result = cut.save(review);
+
+    System.out.println(result);
+    assertNotNull(result.getId());
   }
 
 }
