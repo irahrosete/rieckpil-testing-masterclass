@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -50,5 +51,16 @@ class ReviewControllerTest {
         .perform(get("/api/books/reviews"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size()", Matchers.is(1)));
+  }
+
+  @Test
+  void shouldNotReturnReviewsWhenUserUnauthenticated() throws Exception {
+    this.mockMvc.perform(get("/api/books/reviews/statistics")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockUser(username = "duke")
+  void shouldNotReturnReviewsWhenUserAuthenticated() throws Exception {
+    this.mockMvc.perform(get("/api/books/reviews/statistics")).andExpect(status().isOk());
   }
 }
