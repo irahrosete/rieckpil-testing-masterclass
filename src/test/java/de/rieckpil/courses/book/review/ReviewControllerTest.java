@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -107,5 +108,31 @@ class ReviewControllerTest {
         .andExpect(status().isCreated())
         .andExpect(header().exists("Location"))
         .andExpect(header().string("Location", Matchers.containsString("/books/42/reviews/84")));
+  }
+
+  @Test
+  void shouldRejectNewBookReviewForAuthenticatedUserWithInvalidPayload() throws Exception {
+
+    String requestBody =
+        """
+    {
+      "reviewContent": "I really like this book!",
+      "rating": -1
+    }""";
+
+    this.mockMvc
+        .perform(
+            post("/api/books/{isbn}/reviews", 42)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+                .with(
+                    jwt()
+                        .jwt(
+                            builder ->
+                                builder
+                                    .claim("email", "duke@spring.io")
+                                    .claim("preferred_username", "duke"))))
+        .andExpect(status().isBadRequest())
+        .andDo(MockMvcResultHandlers.print());
   }
 }
