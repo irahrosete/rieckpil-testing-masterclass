@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -139,9 +140,8 @@ class ReviewControllerTest {
   @Test
   void shouldNotAllowDeletingReviewsWhenUserIsAuthenticatedWithoutModeratorRole() throws Exception {
     this.mockMvc
-      .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3)
-        .with(jwt()))
-      .andExpect(status().isForbidden());
+        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3).with(jwt()))
+        .andExpect(status().isForbidden());
 
     verifyNoInteractions(reviewService);
   }
@@ -149,9 +149,21 @@ class ReviewControllerTest {
   @Test
   void shouldAllowDeletingReviewsWhenUserIsAuthenticatedWithModeratorRole() throws Exception {
     this.mockMvc
-      .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3)
-        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_moderator"))))
-      .andExpect(status().isOk());
+        .perform(
+            delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3)
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_moderator"))))
+        .andExpect(status().isOk());
+
+    verify(reviewService).deleteReview("42", 3L);
+  }
+
+  @Test
+  @WithMockUser(roles = "moderator")
+  void shouldAllowDeletingReviewsWhenUserIsAuthenticatedWithModeratorRoleUsingMockUser()
+      throws Exception {
+    this.mockMvc
+        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3))
+        .andExpect(status().isOk());
 
     verify(reviewService).deleteReview("42", 3L);
   }
