@@ -7,6 +7,7 @@ import de.rieckpil.courses.config.WebSecurityConfig;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -15,8 +16,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ReviewController.class)
 @Import(WebSecurityConfig.class)
+@Execution(SAME_THREAD)
 class ReviewControllerTest {
 
   @MockitoBean private ReviewService reviewService;
@@ -58,6 +60,7 @@ class ReviewControllerTest {
 
   @Test
   void shouldNotReturnReviewsWhenUserUnauthenticated() throws Exception {
+
     this.mockMvc.perform(get("/api/books/reviews/statistics")).andExpect(status().isUnauthorized());
 
     verifyNoInteractions(reviewService);
@@ -96,7 +99,7 @@ class ReviewControllerTest {
 
     this.mockMvc
         .perform(
-            post("/api/books/{isbn}/reviews", 42)
+            post("/api/books/{isbn}/reviews", "42")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
                 .with(
@@ -123,7 +126,7 @@ class ReviewControllerTest {
 
     this.mockMvc
         .perform(
-            post("/api/books/{isbn}/reviews", 42)
+            post("/api/books/{isbn}/reviews", "42")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
                 .with(
@@ -133,14 +136,14 @@ class ReviewControllerTest {
                                 builder
                                     .claim("email", "duke@spring.io")
                                     .claim("preferred_username", "duke"))))
-        .andExpect(status().isBadRequest())
-        .andDo(MockMvcResultHandlers.print());
+        //        .andDo(MockMvcResultHandlers.print())
+        .andExpect(status().isBadRequest());
   }
 
   @Test
   void shouldNotAllowDeletingReviewsWhenUserIsAuthenticatedWithoutModeratorRole() throws Exception {
     this.mockMvc
-        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3).with(jwt()))
+        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", "42", 3L).with(jwt()))
         .andExpect(status().isForbidden());
 
     verifyNoInteractions(reviewService);
@@ -150,7 +153,7 @@ class ReviewControllerTest {
   void shouldAllowDeletingReviewsWhenUserIsAuthenticatedWithModeratorRole() throws Exception {
     this.mockMvc
         .perform(
-            delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3)
+            delete("/api/books/{isbn}/reviews/{reviewId}", "42", 3L)
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_moderator"))))
         .andExpect(status().isOk());
 
@@ -162,7 +165,7 @@ class ReviewControllerTest {
   void shouldAllowDeletingReviewsWhenUserIsAuthenticatedWithModeratorRoleUsingMockUser()
       throws Exception {
     this.mockMvc
-        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", 42, 3))
+        .perform(delete("/api/books/{isbn}/reviews/{reviewId}", "42", 3L))
         .andExpect(status().isOk());
 
     verify(reviewService).deleteReview("42", 3L);
