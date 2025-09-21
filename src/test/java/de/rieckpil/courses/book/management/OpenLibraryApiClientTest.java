@@ -1,5 +1,8 @@
 package de.rieckpil.courses.book.management;
 
+import java.io.IOException;
+import java.util.Objects;
+
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -12,9 +15,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
-import java.io.IOException;
-import java.util.Objects;
-
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OpenLibraryApiClientTest {
@@ -150,5 +151,29 @@ class OpenLibraryApiClientTest {
               new MockResponse().setResponseCode(500).setBody("Sorry, system is down :("));
           cut.fetchMetadataForBook(ISBN);
         });
+  }
+
+  @Test
+  void shouldRetryWhenRemoteServerIsSlowOrFailing() {
+    this.mockWebServer.enqueue(
+        new MockResponse().setResponseCode(500).setBody("Sorry, system is down :("));
+
+    this.mockWebServer.enqueue(
+        new MockResponse()
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .setResponseCode(200)
+            .setBody(VALID_RESPONSE)
+            .setBodyDelay(2, SECONDS));
+
+    this.mockWebServer.enqueue(
+        new MockResponse()
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .setResponseCode(200)
+            .setBody(VALID_RESPONSE));
+
+    Book result = cut.fetchMetadataForBook(ISBN);
+
+    assertEquals("9780596004651", result.getIsbn());
+    assertNull(result.getId());
   }
 }
