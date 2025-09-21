@@ -1,22 +1,43 @@
 package de.rieckpil.courses.book.management;
 
-import java.io.IOException;
-
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.io.IOException;
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class OpenLibraryApiClientTest {
   private MockWebServer mockWebServer;
   private OpenLibraryApiClient cut;
+
+  private static final String ISBN = "9780596004651";
+
+  private static String VALID_RESPONSE;
+
+  static {
+    try {
+      VALID_RESPONSE =
+          new String(
+              Objects.requireNonNull(
+                      OpenLibraryApiClientTest.class
+                          .getClassLoader()
+                          .getResourceAsStream("stubs/openlibrary/success-" + ISBN + ".json"))
+                  .readAllBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   @BeforeEach
   public void setup() throws IOException {
@@ -44,5 +65,32 @@ class OpenLibraryApiClientTest {
   void notNull() {
     assertNotNull(cut);
     assertNotNull(mockWebServer);
+  }
+
+  @Test
+  void shouldReturnBookWhenResultIsSuccess() throws InterruptedException {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .setBody(VALID_RESPONSE);
+
+    this.mockWebServer.enqueue(mockResponse);
+
+    Book result = cut.fetchMetadataForBook(ISBN);
+
+    assertEquals("9780596004651", result.getIsbn());
+    assertEquals("Head first Java", result.getTitle());
+    assertEquals("https://covers.openlibrary.org/b/id/388761-S.jpg", result.getThumbnailUrl());
+    assertEquals("Kathy Sierra", result.getAuthor());
+    assertEquals(
+        "Your brain on Java--a learner's guide--Cover.Includes index.", result.getDescription());
+    assertEquals("Java (Computer program language)", result.getGenre());
+    assertEquals("O'Reilly", result.getPublisher());
+    assertEquals(619, result.getPages());
+
+    assertNull(result.getId());
+
+    RecordedRequest recordedRequest = this.mockWebServer.takeRequest();
+    assertEquals("/api/books?jscmd=data&format=json&bibkeys=" + ISBN, recordedRequest.getPath());
   }
 }
