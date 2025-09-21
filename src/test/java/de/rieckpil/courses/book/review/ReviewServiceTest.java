@@ -1,5 +1,6 @@
 package de.rieckpil.courses.book.review;
 
+import de.rieckpil.courses.book.management.Book;
 import de.rieckpil.courses.book.management.BookRepository;
 import de.rieckpil.courses.book.management.UserService;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
@@ -43,5 +44,20 @@ class ReviewServiceTest {
 
     assertThrows(
         IllegalArgumentException.class, () -> cut.createBookReview(ISBN, null, USERNAME, EMAIL));
+  }
+
+  @Test
+  void shouldRejectReviewWhenReviewQualityIsBad() {
+    BookReviewRequest bookReviewRequest = new BookReviewRequest("Title", "BADCONTENT!", 1);
+
+    when(bookRepository.findByIsbn(ISBN)).thenReturn(new Book());
+    when(reviewVerifier.doesMeetQualityStandards(bookReviewRequest.getReviewContent()))
+        .thenReturn(false);
+
+    assertThrows(
+        BadReviewQualityException.class,
+        () -> cut.createBookReview(ISBN, bookReviewRequest, USERNAME, EMAIL));
+
+    verify(reviewRepository, times(0)).save(any(Review.class));
   }
 }
