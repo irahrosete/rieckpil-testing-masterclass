@@ -93,4 +93,51 @@ class OpenLibraryApiClientTest {
     RecordedRequest recordedRequest = this.mockWebServer.takeRequest();
     assertEquals("/api/books?jscmd=data&format=json&bibkeys=" + ISBN, recordedRequest.getPath());
   }
+
+  @Test
+  void shouldReturnBookWhenResultIsSuccessButLackingAllInformation() {
+    String partialResponse =
+        """
+      {
+        "9780596004651": {
+          "publishers": [
+            {
+              "name": "O'Reilly"
+            }
+          ],
+          "title": "Head first Java",
+          "authors": [
+            {
+              "url": "https://openlibrary.org/authors/OL1400543A/Kathy_Sierra",
+              "name": "Kathy Sierra"
+            }
+          ],
+          "number_of_pages": 619,
+          "cover": {
+            "small": "https://covers.openlibrary.org/b/id/388761-S.jpg",
+            "large": "https://covers.openlibrary.org/b/id/388761-L.jpg",
+            "medium": "https://covers.openlibrary.org/b/id/388761-M.jpg"
+          }
+        }
+      }""";
+
+    this.mockWebServer.enqueue(
+        new MockResponse()
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .setResponseCode(200)
+            .setBody(partialResponse));
+
+    Book result = cut.fetchMetadataForBook(ISBN);
+
+    assertEquals("9780596004651", result.getIsbn());
+    assertEquals("Head first Java", result.getTitle());
+    assertEquals("https://covers.openlibrary.org/b/id/388761-S.jpg", result.getThumbnailUrl());
+    assertEquals("Kathy Sierra", result.getAuthor());
+    assertEquals("n.A", result.getDescription());
+    assertEquals("n.A", result.getGenre());
+    assertEquals("O'Reilly", result.getPublisher());
+    assertEquals(619, result.getPages());
+
+    assertNull(result.getId());
+  }
 }
