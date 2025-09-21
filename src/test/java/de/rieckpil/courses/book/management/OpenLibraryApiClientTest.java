@@ -140,4 +140,15 @@ class OpenLibraryApiClientTest {
 
     assertNull(result.getId());
   }
+
+  @Test
+  void shouldPropagateExceptionWhenRemoteSystemIsDown() {
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          this.mockWebServer.enqueue(
+              new MockResponse().setResponseCode(500).setBody("Sorry, system is down :("));
+          cut.fetchMetadataForBook(ISBN);
+        });
+  }
 }
