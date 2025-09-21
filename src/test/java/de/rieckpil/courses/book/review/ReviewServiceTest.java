@@ -2,6 +2,7 @@ package de.rieckpil.courses.book.review;
 
 import de.rieckpil.courses.book.management.Book;
 import de.rieckpil.courses.book.management.BookRepository;
+import de.rieckpil.courses.book.management.User;
 import de.rieckpil.courses.book.management.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,5 +60,26 @@ class ReviewServiceTest {
         () -> cut.createBookReview(ISBN, bookReviewRequest, USERNAME, EMAIL));
 
     verify(reviewRepository, times(0)).save(any(Review.class));
+  }
+
+  @Test
+  void shouldStoreReviewWhenQualityIsGoodAndBookIsPresent() {
+    BookReviewRequest bookReviewRequest = new BookReviewRequest("Title", "GOODCONTENT!", 1);
+
+    when(bookRepository.findByIsbn(ISBN)).thenReturn(new Book());
+    when(reviewVerifier.doesMeetQualityStandards(bookReviewRequest.getReviewContent()))
+        .thenReturn(true);
+    when(userService.getOrCreateUser(USERNAME, EMAIL)).thenReturn(new User());
+    when(reviewRepository.save(any(Review.class)))
+        .thenAnswer(
+            invocationOnMock -> {
+              Review review = invocationOnMock.getArgument(0);
+              review.setId(42L);
+              return review;
+            });
+
+    Long result = cut.createBookReview(ISBN, bookReviewRequest, USERNAME, EMAIL);
+
+    assertEquals(42, result);
   }
 }
